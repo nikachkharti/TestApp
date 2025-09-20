@@ -11,6 +11,7 @@ internal class Program
         builder.AddRepository();
         builder.AddMapster();
         builder.AddFluentValidation();
+        builder.AddServices();
 
         var app = builder.Build();
 

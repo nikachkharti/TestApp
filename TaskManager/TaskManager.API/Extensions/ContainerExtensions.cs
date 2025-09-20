@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using TaskManager.Application.Contracts.Repository;
+using TaskManager.Application.Contracts.Service;
 using TaskManager.Application.Mapping;
+using TaskManager.Application.Service;
 using TaskManager.Application.Validators;
 using TaskManager.Infrastructure.Repository;
 
@@ -76,5 +78,11 @@ namespace TaskManager.API.Extensions
         {
             builder.Services.AddValidatorsFromAssemblyContaining<TodoForCreatingDtoValidator>();
         }
+
+        public static void AddServices(this WebApplicationBuilder builder)
+        {
+            builder.Services.AddScoped<ITodoService, TodoService>();
+        }
+
     }
 }
