@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using TaskManager.Application.Contracts.Repository;
+using TaskManager.Infrastructure.Repository;
 
 namespace TaskManager.API.Extensions
 {
@@ -51,5 +53,9 @@ namespace TaskManager.API.Extensions
             });
         }
 
+        public static void AddRepository(this WebApplicationBuilder builder)
+        {
+            builder.Services.AddScoped<ITodoRepository, TodoRepository>();
+        }
     }
 }

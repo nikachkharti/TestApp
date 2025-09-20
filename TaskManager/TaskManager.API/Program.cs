@@ -8,6 +8,7 @@ internal class Program
 
         builder.AddControllers();
         builder.AddSwagger();
+        builder.AddRepository();
 
         var app = builder.Build();
 
