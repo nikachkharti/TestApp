@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Mapster;
+using MapsterMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using TaskManager.Application.Contracts.Repository;
+using TaskManager.Application.Mapping;
 using TaskManager.Infrastructure.Repository;
 
 namespace TaskManager.API.Extensions
@@ -56,6 +59,15 @@ namespace TaskManager.API.Extensions
         public static void AddRepository(this WebApplicationBuilder builder)
         {
             builder.Services.AddScoped<ITodoRepository, TodoRepository>();
+        }
+
+        public static void AddMapster(this WebApplicationBuilder builder)
+        {
+            var config = TypeAdapterConfig.GlobalSettings;
+            config.Scan(typeof(MappingConfig).Assembly);
+
+            builder.Services.AddSingleton(config);
+            builder.Services.AddScoped<IMapper, ServiceMapper>();
         }
     }
 }

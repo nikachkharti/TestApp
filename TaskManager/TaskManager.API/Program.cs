@@ -9,6 +9,7 @@ internal class Program
         builder.AddControllers();
         builder.AddSwagger();
         builder.AddRepository();
+        builder.AddMapster();
 
         var app = builder.Build();
 
