@@ -28,12 +28,21 @@ namespace TaskManager.Application.Service
 
             return _todoRepository.AddTodo(todo);
         }
-
         public Guid DeleteExistedTodo(Guid id)
         {
             return _todoRepository.DeleteTodo(id);
         }
+        public IEnumerable<TodoForGettingDto> GetAllTodos()
+        {
+            var todos = _todoRepository.AllTodos();
 
+            if (todos.Count <= 0)
+            {
+                return Enumerable.Empty<TodoForGettingDto>();
+            }
+
+            return _mapper.Map<List<TodoForGettingDto>>(todos);
+        }
         public IEnumerable<TodoForGettingDto> GetAllTodosOfSpecificUser(Guid userId)
         {
             var todos = _todoRepository.GetTodosOfUser(userId);
@@ -45,7 +54,6 @@ namespace TaskManager.Application.Service
 
             return _mapper.Map<List<TodoForGettingDto>>(todos);
         }
-
         public TodoForGettingDto GetSingleTodo(Guid todoId)
         {
             var todo = _todoRepository.GetTodo(todoId);
@@ -57,7 +65,6 @@ namespace TaskManager.Application.Service
 
             return _mapper.Map<TodoForGettingDto>(todo);
         }
-
         private void ValidateInput(TodoForCreatingDto todoForCreatingDto)
         {
             var validationResult = _todoForCreatingValidator.Validate(todoForCreatingDto);
