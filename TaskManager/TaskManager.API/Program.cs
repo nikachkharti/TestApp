@@ -10,6 +10,7 @@ internal class Program
         builder.AddSwagger();
         builder.AddRepository();
         builder.AddMapster();
+        builder.AddFluentValidation();
 
         var app = builder.Build();
 

@@ -1,10 +1,12 @@
-﻿using Mapster;
+﻿using FluentValidation;
+using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using TaskManager.Application.Contracts.Repository;
 using TaskManager.Application.Mapping;
+using TaskManager.Application.Validators;
 using TaskManager.Infrastructure.Repository;
 
 namespace TaskManager.API.Extensions
@@ -68,6 +70,11 @@ namespace TaskManager.API.Extensions
 
             builder.Services.AddSingleton(config);
             builder.Services.AddScoped<IMapper, ServiceMapper>();
+        }
+
+        public static void AddFluentValidation(this WebApplicationBuilder builder)
+        {
+            builder.Services.AddValidatorsFromAssemblyContaining<TodoForCreatingDtoValidator>();
         }
     }
 }
