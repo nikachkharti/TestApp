@@ -1,0 +1,159 @@
+# .github/workflows/deploy.yml
+name: Deploy .NET API to DigitalOcean
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-25.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x' # Change to your .NET version
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore
+    
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-25.04
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x' # Change to your .NET version
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build and Publish
+      run: |
+        dotnet publish -c Release -o ./publish
+        tar -czf release.tar.gz -C ./publish .
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-artifact
+        path: release.tar.gz
+    
+    - name: Deploy to DigitalOcean
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.PRIVATE_KEY }}
+        port: ${{ secrets.PORT }}
+
+        echo: 
+            HOST - ${{ secrets.HOST }}
+            USERNAME - ${{ secrets.USERNAME }}
+            PRIVATE KEY - ${{ secrets.PRIVATE_KEY }}
+            PORT - ${{ secrets.PORT }}
+  
+        script: |
+          # Navigate to app directory
+          cd /var/www/taskmanager-api
+          
+          # Stop the application service
+
+          # 1. What is the application service?
+          # The application service is a systemd service that manages your .NET Web API application on the Linux server. 
+          # Think of it as a background process manager that:
+          # Keeps your .NET app running continuously
+          # Automatically restarts it if it crashes
+          # Starts your app when the server boots up
+          # Manages logging and resource allocation
+          # When you run sudo systemctl stop your-app-name.service, 
+          # you're telling the Linux system to gracefully shut down 
+          # your .NET application before deploying the new version.
+
+          # 2. What services to start and check?
+          # Replace your-app-name.service with the same name you used when creating the systemd service. This should match your application name.
+          # Examples:
+          # If your app is called MyWebApi, you'd use MyWebApi.service
+
+          sudo systemctl stop TaskManager.API.service # Replace with your service name.
+          
+          # Backup current version (optional)
+          # sudo cp -r ./current ./backup-$(date +%Y%m%d_%H%M%S) || true
+          
+          # Remove old files
+          sudo rm -rf ./current/*
+          
+          # Download the latest artifact from the previous step
+          # Note: This requires setting up artifact download or using rsync/scp
+    
+    - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.PRIVATE_KEY }}
+        port: ${{ secrets.PORT }}
+        source: "release.tar.gz"
+        target: "/tmp/"
+    
+        echo: 
+            HOST - ${{ secrets.HOST }}
+            USERNAME - ${{ secrets.USERNAME }}
+            PRIVATE KEY - ${{ secrets.PRIVATE_KEY }}
+            PORT - ${{ secrets.PORT }}
+
+    - name: Extract and restart service
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.PRIVATE_KEY }}
+        port: ${{ secrets.PORT }}
+
+        echo: 
+            HOST - ${{ secrets.HOST }}
+            USERNAME - ${{ secrets.USERNAME }}
+            PRIVATE KEY - ${{ secrets.PRIVATE_KEY }}
+            PORT - ${{ secrets.PORT }}
+
+        script: |
+          # Extract files
+          cd /var/www/taskmanager-api
+          sudo tar -xzf /tmp/release.tar.gz -C ./current/
+          
+          # Set permissions
+          sudo chown -R www-data:www-data ./current
+
+          # Replace with your executable name.
+
+          # What should you replace YourAppName with?
+          # Replace YourAppName with the actual name of your compiled .NET executable. This depends on your project structure:
+          # Example scenarios:
+          # If your project file is named MyWebApi.csproj, then after dotnet publish, you'll get an executable named MyWebApi
+          sudo chmod +x ./current/TaskManager.API
+          
+          # Start the service
+          sudo systemctl start TaskManager.API.service # Replace with your service name.
+          sudo systemctl enable TaskManager.API.service # Replace with your service name.
+          
+          # Check if service is running
+          sudo systemctl status TaskManager.API.service # Replace with your service name.
+          
+          # Clean up
+          rm /tmp/release.tar.gz
